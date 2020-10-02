@@ -1,0 +1,239 @@
+import 'dart:convert';
+
+import 'package:NodeWithFlutter/Pages/HomePage.dart';
+import 'package:NodeWithFlutter/Pages/SignUpPage.dart';
+import "package:flutter/material.dart";
+import '../Api/network_handler.dart';
+
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+class SignInPage extends StatefulWidget {
+  SignInPage({Key key}) : super(key: key);
+
+  @override
+  _SignInPageState createState() => _SignInPageState();
+}
+
+class _SignInPageState extends State<SignInPage> {
+  bool vis = true;
+  final _globalkey = GlobalKey<FormState>();
+
+  TextEditingController _usernameController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
+
+  NetworkHandler networkHandler = NetworkHandler();
+
+  String errorText;
+  bool validate = false;
+  bool circular = false;
+  final storage = new FlutterSecureStorage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Container(
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.white, Colors.green[200]],
+              begin: const FractionalOffset(0.0, 1.0),
+              end: const FractionalOffset(0.0, 1.0),
+              stops: [0.0, 1.0],
+              tileMode: TileMode.repeated,
+            ),
+          ),
+          child: Form(
+            key: _globalkey,
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 40, vertical: 10.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Sign In with Email",
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  usernameTextField(),
+                  SizedBox(
+                    height: 15,
+                  ),
+                  passwordTextField(),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Text(
+                        "Forgot Password ?",
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 20),
+                      InkWell(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SignUpPage()));
+                        },
+                        child: Text(
+                          "New User?",
+                          style: TextStyle(
+                            color: Colors.blue[900],
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 30,
+                  ),
+                  InkWell(
+                    onTap: () async {
+                      setState(() {
+                        circular = true;
+                      });
+
+                      //Login Logic start here
+                      Map<String, String> data = {
+                        "email": _usernameController.text,
+                        "password": _passwordController.text,
+                      };
+                      var response =
+                          await networkHandler.post("/api/users/login", data);
+
+                      Map<String, dynamic> output = json.decode(response.body);
+
+                      print(output["loginSuccess"]);
+                      print(output["message"]);
+                      //print(output["user"]["token"]);
+
+                      if (output["loginSuccess"]) {
+                        await storage.write(
+                            key: "token", value: output["user"]["token"]);
+                        setState(() {
+                          validate = true;
+                          circular = false;
+                        });
+
+                        print(output["user"]);
+
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => HomePage(),
+                            ),
+                            (route) => false);
+                      } else {
+                        //String output = json.decode(response.body);
+                        setState(() {
+                          validate = false;
+                          errorText = "Invalid Email or Password";
+                          circular = false;
+                        });
+                      }
+
+                      // login logic End here
+                    },
+                    child: Container(
+                      width: 150,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Color(0xff00A86B),
+                      ),
+                      child: Center(
+                        child: circular
+                            ? CircularProgressIndicator()
+                            : Text(
+                                "Sign In",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  // Divider(
+                  //   height: 50,
+                  //   thickness: 1.5,
+                  // ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget usernameTextField() {
+    return Column(
+      children: [
+        Text("Email"),
+        TextFormField(
+          controller: _usernameController,
+          decoration: InputDecoration(
+            errorText: validate ? null : errorText,
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.black,
+                width: 2,
+              ),
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget passwordTextField() {
+    return Column(
+      children: [
+        Text("Password"),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: vis,
+          decoration: InputDecoration(
+            errorText: validate ? null : errorText,
+            suffixIcon: IconButton(
+              icon: Icon(vis ? Icons.visibility_off : Icons.visibility),
+              onPressed: () {
+                setState(() {
+                  vis = !vis;
+                });
+              },
+            ),
+            helperStyle: TextStyle(
+              fontSize: 14,
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.black,
+                width: 2,
+              ),
+            ),
+          ),
+        )
+      ],
+    );
+  }
+}
