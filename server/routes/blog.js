@@ -18,8 +18,23 @@ router.post('/add', auth, (req, res) => {
         return res.status(200).json({ success: true, msg: "blog saved Successfully", blog });
     }).catch((err) => {
         if (err) return res.json({ success: false, err });
-    })
+    });
 
+});
+
+// get all blogs
+router.get('/getData', auth, (req, res) => {
+    Blog.find({ username: req.user.username }, (err, result) => {
+        if (err) return res.status(400).json({ success: false, err });
+        else if (result == null) {
+            return res.json({ success: false, data: [] });
+        } else {
+        
+            return res.status(200).json({ success: true, data: result });
+
+        }
+        
+    });
 });
 
 

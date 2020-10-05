@@ -1,9 +1,9 @@
 import 'dart:io';
-
 import 'package:NodeWithFlutter/Api/network_handler.dart';
 import 'package:NodeWithFlutter/Pages/HomePage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
 
 class CreatProfile extends StatefulWidget {
   CreatProfile({Key key}) : super(key: key);
@@ -17,6 +17,7 @@ class _CreatProfileState extends State<CreatProfile> {
   bool circular = false;
   PickedFile _imageFile;
 
+
   final _globalkey = GlobalKey<FormState>();
   TextEditingController _name = TextEditingController();
   TextEditingController _profession = TextEditingController();
@@ -24,6 +25,8 @@ class _CreatProfileState extends State<CreatProfile> {
   TextEditingController _title = TextEditingController();
   TextEditingController _about = TextEditingController();
   final ImagePicker _picker = ImagePicker();
+
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -10,6 +10,7 @@ class ProfileModel {
   String DOB;
   String titleline;
   String about;
+  
   ProfileModel(
       {this.DOB,
       this.about,
